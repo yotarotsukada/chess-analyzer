@@ -1,0 +1,12 @@
+.react-router
+build
+node_modules
+.git
+.github
+docs
+e2e
+tests
+playwright-report
+test-results
+.agents
+.env

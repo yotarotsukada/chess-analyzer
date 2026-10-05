@@ -1,0 +1,45 @@
+# ローカル開発と E2E 用。CI でも同じ構成を使う（D34）。
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: chess
+      POSTGRES_PASSWORD: chess
+      POSTGRES_DB: chess
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chess"]
+      interval: 2s
+      retries: 30
+
+  migrate:
+    build: .
+    command: ["pnpm", "db:migrate"]
+    environment: &env
+      DATABASE_URL: postgres://chess:chess@db:5432/chess
+      ENGINE_DEPTH: ${ENGINE_DEPTH:-6}
+      ENGINE_THREADS: "1"
+      # ローカルと E2E では上限を緩める。
+      LIMIT_PER_BROWSER_DAILY: ${LIMIT_PER_BROWSER_DAILY:-1000}
+      LIMIT_PER_IP_DAILY: ${LIMIT_PER_IP_DAILY:-1000}
+      LIMIT_GLOBAL_DAILY: ${LIMIT_GLOBAL_DAILY:-1000}
+      NODE_ENV: production
+    depends_on:
+      db: { condition: service_healthy }
+
+  web:
+    build: .
+    environment: *env
+    ports: ["3000:3000"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  worker:
+    build: .
+    command: ["pnpm", "worker"]
+    environment:
+      <<: *env
+      # ローカルでは Fly からの起動がないので、終了しないようにする。
+      WORKER_IDLE_EXIT_MS: "86400000"
+    depends_on:
+      migrate: { condition: service_completed_successfully }

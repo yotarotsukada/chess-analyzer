@@ -1,0 +1,38 @@
+name: Claude
+
+# Issue に `agent` ラベルを付けると、Claude Code が実装して PR を出す（D11、D15）。
+# Issue や PR のコメントで @claude と書いた場合も動く。マージは必ず人が行う。
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+concurrency:
+  group: claude
+  cancel-in-progress: false
+
+jobs:
+  claude:
+    if: >-
+      (github.event_name == 'issues' && github.event.label.name == 'agent') ||
+      (github.event_name != 'issues' && contains(github.event.comment.body, '@claude') &&
+       github.event.comment.user.login == github.repository_owner)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: anthropics/claude-code-action@v1
+        with:
+          # Claude の契約に紐づく OAuth トークン（X3）。`claude setup-token` で発行する。
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: ${{ github.event_name == 'issues' && format('Issue #{0} を実装してください。CLAUDE.md の手順に従い、Issue のスコープだけを変更し、main への PR を作成して本文に "Closes #{0}" を書いてください。', github.event.issue.number) || '' }}
+          claude_args: --max-turns 80
