@@ -11,6 +11,8 @@ Duolingo などで指したチェスの対局を、1手ずつ「他の手なら�
   - chessground など GPL の盤面 UI を使う（ADR 0003）
   - Chess.com からの取り込み、Duolingo のスクレイピングや拡張機能（ADR 0002）
   - ログインを足す（ADR 0005）
+  - GPL や AGPL のリポジトリ（chessops、lichess-puzzler など）からコードを持ってくる・移植する（ADR 0008）
+- 重要局面（Key Moment）の機能は、AI Commentary がなくても完結させる。会員を前提にしたテーブルや分岐を先回りして作らない（ADR 0007）。
 
 ## 進め方
 
