@@ -7,7 +7,7 @@ import path from "node:path";
 
 const AUTHOR_EMAIL = "yotarotsukada@gmail.com";
 const PROTECTED =
-  /(^|[\s/"'=])(docs\/adr\/\S*|docs\/decisions\.md|fly\.toml|\.claude\/skills\/review\/\S*|\.claude\/hooks\/\S*|\.claude\/settings\.json)/;
+  /(^|[\s/"'=])(docs\/adr(\/\S*)?|docs\/decisions\.md|fly\.toml|\.claude\/skills\/review(\/\S*)?|\.claude\/hooks(\/\S*)?|\.claude\/settings\.json)/;
 
 function decide(permissionDecision, reason) {
   process.stdout.write(
@@ -93,6 +93,17 @@ for (let i = 0; i < parts.length; i++) {
     continue;
   }
 
+  // `bash -c` / `sh -c` の中身は追えないので、git の操作を含むなら確認に回す。
+  if (/^(ba|z)?sh\s+-c\b/.test(orig) && /\bgit\b|\bgh\s+pr\b/.test(orig)) {
+    ask("シェルを入れ子にした git / gh の操作は、ガードで確かめられない。`git -C <パス> ...` の形で直接実行する。");
+  }
+  if (/^export\s+GIT_(AUTHOR|COMMITTER)_EMAIL=/.test(orig) && !orig.includes(AUTHOR_EMAIL)) {
+    deny(`コミットの作者のメールアドレスは ${AUTHOR_EMAIL} だけを使う。`);
+  }
+  // `env` や `command`、絶対パスの git を、ふつうの git として扱う。
+  orig = orig.replace(/^(env|command)\s+/, "").replace(/^\S*\/git\s/, "git ");
+  part = part.replace(/^(env|command)\s+/, "").replace(/^\S*\/git\s/, "git ");
+
   // 先頭の環境変数（VAR=value）を外す。作者を変える変数は確かめる。
   const envs = [];
   while (/^[A-Za-z_][A-Za-z0-9_]*=\S*\s+/.test(orig)) {
@@ -157,7 +168,8 @@ for (let i = 0; i < parts.length; i++) {
 
   if (/^gh\s+pr\s+merge\b/.test(part)) {
     const squash = /\s(--squash|-s)(\s|$)/.test(` ${orig} `);
-    const author = new RegExp(`(--author-email|-A)[=\\s]+["']?${AUTHOR_EMAIL.replace(".", "\\.")}`).test(orig);
+    const escaped = AUTHOR_EMAIL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const author = new RegExp(`(--author-email|-A)[=\\s]+["']?${escaped}["']?(\\s|$)`).test(orig);
     if (!squash || !author) {
       deny(
         `マージは squash で、作者を gmail にする: \`gh pr merge <番号> --squash --delete-branch --author-email ${AUTHOR_EMAIL}\`。マージ前に issue-loop スキルの関門をすべて通すこと。`,
