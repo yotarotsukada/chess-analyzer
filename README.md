@@ -29,6 +29,8 @@ Fly.io（`fly.toml`）。Web は常時起動の小さなマシンで、解析 Wo
 
 ## ライセンスと出典
 
+このリポジトリのコードは [MIT License](LICENSE) です。
+
 - オープニング名：[lichess-org/chess-openings](https://github.com/lichess-org/chess-openings)（CC0）
 - 盤面 UI：[react-chessboard](https://github.com/Clariity/react-chessboard)（MIT）
 - 解析エンジン：[Stockfish](https://stockfishchess.org/)（GPL-3.0。サーバー上でのみ実行し、配布はしていません）

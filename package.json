@@ -1,6 +1,7 @@
 {
   "name": "chess-analyzer",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@10.4.0",
   "engines": {
