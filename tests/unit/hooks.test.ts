@@ -1,15 +1,19 @@
 import { execFileSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 
 const root = path.resolve(import.meta.dirname, "../..");
 
 /** 手元の git の設定やブランチに左右されないよう、一時的なリポジトリで判定する。 */
 function tempRepo(branch: string): string {
   const dir = mkdtempSync(path.join(os.tmpdir(), "guard-"));
-  const g = (...args: string[]) => execFileSync("git", ["-C", dir, ...args], { stdio: "ignore" });
+  // ユーザー全体の git 設定（署名やフック）に左右されないようにする。
+  const g = (...args: string[]) =>
+    execFileSync("git", ["-C", dir, "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", ...args], {
+      stdio: "ignore",
+    });
   g("init", "-q", "-b", "main");
   g("config", "user.email", "yotarotsukada@gmail.com");
   g("config", "user.name", "test");
@@ -19,6 +23,9 @@ function tempRepo(branch: string): string {
 }
 const work = tempRepo("feature/x");
 const main = tempRepo("main");
+afterAll(() => {
+  for (const dir of [work, main]) rmSync(dir, { recursive: true, force: true });
+});
 
 function decide(hook: string, toolInput: Record<string, string>, cwd = work): string {
   const out = execFileSync("node", [path.join(root, ".claude/hooks", hook)], {
