@@ -15,7 +15,7 @@ description: GitHub の Issue を、実装・ローカルの検証・別エー�
 4. **レビュー**：`reviewer` サブエージェントを新しく呼ぶ（実装の文脈を渡さない）。渡すのは Issue の番号、worktree のパス、2回目以降なら前回の指摘だけ。
 5. **修正**：blocking が1件以上なら、指摘をそのまま `implementer` に渡して直させ、手順 4 に戻る。修正は最大2回。3回目のレビューでも blocking が残れば、手順 9 へ。
 6. **PR**：worktree で `gh pr create --base main`。タイトルはコミットと同じ形、本文は次の「## 結果」と同じ中身に `Closes #<n>` を足す。
-7. **マージ**：GitHub の CI（check、e2e）が緑になるのを `gh pr checks <PR> --watch` で待つ。ユーザーの確認が要るファイル（ADR・台帳・fly.toml・レビューの観点・Hooks）を変えている PR は、変更の中身を説明してこのセッションでユーザーの承認を得る。そのうえで `gh pr merge <PR> --squash --delete-branch --author-email yotarotsukada@gmail.com`。
+7. **マージ**：GitHub の CI（check、e2e）が緑になるのを `gh pr checks <PR> --watch` で待つ。ユーザーの確認が要るファイル（ADR・台帳・fly.toml・レビューの観点・Hooks）を変えている PR は、変更の中身の要約と PR のリンクを渡し、ユーザーが GitHub の画面でレビューして承認するのを待つ。PR の作者はユーザー自身なので GitHub の「Approve」は使えない。ユーザーが PR に「承認」とコメントしたら承認とみなす（`gh pr view <PR> --json comments,reviews` で owner のコメントを確かめる）。そのうえで `gh pr merge <PR> --squash --delete-branch --author-email yotarotsukada@gmail.com`。
 8. **後片付けと結果**：
    - デプロイ（GitHub Actions）の結果を `gh run list --workflow Deploy` で確かめる。
    - Issue の本文の末尾に「## 結果」を追記する（下の形式。X11）。
