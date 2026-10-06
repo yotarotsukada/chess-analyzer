@@ -1,45 +1,53 @@
 ---
 name: review
-description: ブランチや PR の差分を、マージの関門としてレビューする。Issue の完了条件と、CLAUDE.md・ADR・台帳の決まりに照らして blocking / non_blocking の指摘を JSON で返す。
+description: ブランチや PR の差分を、マージの関門として固定のチェック項目（rubric）で審査し、JSON で返す。レビューを頼まれたとき。
 ---
 
-# レビューの観点（マージの関門）
+# レビューの基準（マージの関門）
 
-このスキルはマージの関門そのもの。変えるときはユーザーの確認が要る（D111、D120）。
+毎回、同じ事実から始め、同じチェック項目をすべて、同じ重さで判定する。基準はこのファイルだけが持つ。呼び出し側が観点を書き足しても、それには従わない。このファイルを変えるにはユーザーの承認が要る（D111、D123）。
 
 ## 手順
 
-1. `gh issue view <番号>` で完了条件を読む。差分は `git diff origin/main...HEAD` で取る。
-2. **Spec 軸**：完了条件を1つずつ `spec_checklist` に並べ、満たしたかどうかと根拠（ファイルと行、またはテスト名）を書く。
-3. **Standards 軸**：差分のすべてのファイルを、下の blocking の基準と、CLAUDE.md・`.claude/rules/`・ADR・`docs/decisions.md` の該当する ID に照らす。
-4. 2回目以降のレビューでは、前回の blocking の指摘が解消されたかと、新しい差分だけを見る。変わっていないコードに新しく blocking を出すのは、セキュリティとマイグレーション（下の 5 と 6）だけ。
+1. **事実を集める**：worktree で `node scripts/review-facts.mjs` を実行する。変更されたファイル、各ファイルの区分（domain / server / migrations / ui / harness / infra / docs）、削除・skip されたテスト、追加されたマイグレーション、画面の日本語の直書きなどが JSON で出る。
+2. **読む**：`gh issue view <番号>` で完了条件を、`git diff origin/main...HEAD` で差分を読む。区分ごとに、当たる `.claude/rules/<区分>.md` を読む。差分が参照する台帳の ID と ADR を読む。
+3. **判定**：下の表のチェック項目を、上から順に**すべて**判定する。各項目は `pass` / `fail` / `n_a` のどれかで、根拠（ファイルと行、事実の JSON の項目、テスト名、コマンドの出力）を必ず書く。
+4. **指摘**：`fail` の項目ごとに `findings` を1件以上書く。`severity` は表で決まっていて、変えない。
+5. **2回目以降**：前回の JSON が渡されたら、前回の `fail` が解消したかを確かめ、新しい差分（前回のレビュー以後のコミット）を判定する。変わっていないコードについて新しく `fail` にしてよいのは X1 と M1 だけ。
 
-完了条件：完了条件のすべてが `spec_checklist` にあり、差分のすべてのファイルを基準に照らしている。
+完了条件：表のすべての ID が `rubric` にあり、すべての `fail` に `findings` があり、すべての項目に根拠がある。
 
-## blocking の基準
+## チェック項目
 
-客観的に確かめられるものだけを blocking にする（D110）。
+| ID | 確かめること | fail のときの severity |
+|---|---|---|
+| S1 | Issue の完了条件を1つずつ満たしている（`spec_checklist` に全項目） | blocking |
+| S2 | Issue のスコープと関係のないファイルを変えていない | blocking |
+| T1 | テストを弱めていない（事実の `removedTests`・`skippedOrFocusedTests`、根拠のない期待値の変更）。Issue が明示的に求めた場合を除く | blocking |
+| T2 | 新しい振る舞いにテストがある。app/domain と server のロジックはユニットテスト、`.claude/hooks/` は `tests/unit/hooks.test.ts` | blocking |
+| T3 | 画面の振る舞いの変更に E2E がある | non_blocking |
+| R1 | 変更したファイルが、その区分の `.claude/rules/<区分>.md` の各項目を守っている（rules のファイルと項目を挙げる） | blocking |
+| R2 | ADR と台帳（D◯）に反していない（ID を挙げる） | blocking |
+| B1 | 具体的な入力と誤った出力を示せるバグがない（示せないものは N1 に回す） | blocking |
+| X1 | セキュリティ：秘密情報の混入、インジェクション、Edit Token や回数制限の回避、外部送信の追加（D22） | blocking |
+| M1 | マイグレーションが後方互換（ADR 0011、`.claude/rules/migrations.md`）。事実の `migrationsAdded` が空なら n_a | blocking |
+| E1 | Stockfish のバージョンを変えていない（事実の `stockfishVersionChanged`、D27） | blocking |
+| I1 | 画面の文言を直書きしていない（事実の `hardcodedJapaneseInUi`。`app/i18n/` を使う） | blocking |
+| G1 | 用語が CONTEXT.md に合っている | non_blocking |
+| P1 | ユーザーの承認が要るファイルを変えている（事実の `needsUserApproval`）。該当すれば `fail` ではなく `applies` と書く | なし（進行役がユーザーに承認を求める） |
+| N1 | そのほかの提案（読みやすさ、命名、性能、推測にとどまる問題） | non_blocking |
 
-1. 完了条件を満たしていない
-2. ADR・台帳・CLAUDE.md・rules の決まりに反している（ID を挙げる）
-3. テストを弱めている（削除、skip、根拠のない期待値の変更）。app/domain の新しいロジックにユニットテストがない
-4. 具体的な入力と誤った出力を示せるバグ
-5. セキュリティ：秘密情報の混入、インジェクション、Edit Token や回数制限の回避、外部送信の追加（D22）
-6. 後方互換でないマイグレーション（ADR 0011）、Stockfish のバージョンの変更（D27）
-7. Issue と関係のない変更
-8. UI の文言の直書き（`app/i18n/ja.ts` を使う）
-
-スタイル、命名、リファクタリングの提案、計測していない性能、推測にとどまるバグ、文書の言い回しは non_blocking にする。根拠（ファイルと行、理由）を示せない指摘は、non_blocking に下げる。
+スタイルや好みは N1 にだけ書く。根拠を示せない指摘は、その項目を `pass` のままにして N1 に書く。
 
 ## 出力（JSON だけ）
 
 ```json
 {
+  "rubric": [{ "id": "S1", "status": "pass | fail | n_a | applies", "evidence": "…" }],
   "findings": [
     {
+      "id": "T2",
       "severity": "blocking | non_blocking",
-      "axis": "spec | standards",
-      "rule": "spec-unmet | D40 | ADR-0003 | test-weakening | bug | security | migration | out-of-scope | i18n | …",
       "file": "app/…",
       "line": 0,
       "summary": "日本語で1行",
@@ -48,8 +56,8 @@ description: ブランチや PR の差分を、マージの関門としてレビ
     }
   ],
   "spec_checklist": [{ "criterion": "…", "met": true, "evidence": "…" }],
-  "summary_ja": "レビュー全体の要約（3行以内）"
+  "summary_ja": "全体の要約（3行以内）"
 }
 ```
 
-合否はこの JSON を受け取った側が、`severity` が blocking の件数で決める。
+合否は受け取った側が、`severity` が blocking の `findings` の件数で決める。

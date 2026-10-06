@@ -12,7 +12,7 @@ Duolingo などで指したチェスの対局を、1手ずつ「他の手なら�
   - 外部サービスからの取り込みは Lichess の API と、ユーザー本人の手入力・PGN だけ（ADR 0002）
   - ログインなし。所有は Edit Token（ADR 0005）
   - Key Moment は AI Commentary がなくても完結させる。会員の仕組みは AI を実装するまで作らない（ADR 0007）
-- `.claude/rules/`：パスごとの決まり（app/domain、server、マイグレーション、画面）。
+- `.claude/rules/`：パスごとの決まり（app/domain、server、マイグレーション、画面、ハーネス）。
 
 ## 進め方
 
