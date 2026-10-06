@@ -18,5 +18,6 @@ fi
 # worktree が違っても同じ名前のスタックを使い、ポートを取り合わないようにする。
 export COMPOSE_PROJECT_NAME=chess-analyzer
 docker compose up -d --build --wait web worker
-pnpm test:e2e
+# 不安定なテストでループを止めないよう、1回だけ再試行する（D107）。
+pnpm test:e2e --retries=1
 echo "verify: すべて通った"

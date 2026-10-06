@@ -22,7 +22,7 @@ hooks:
 2. 実装する。用語は CONTEXT.md に合わせる。Issue のスコープの外は変えない。外で見つけた改善は、最後の報告に「別 Issue の候補」として書く。
 3. テストを書く。app/domain の新しいロジックにはユニットテストを、画面の振る舞いが変わるなら E2E を足す。既存のテストは弱めない。
 4. `scripts/verify.sh` が最後まで通るまで直す（途中の確認は `SKIP_E2E=1` でよい。終える前に必ず E2E まで）。
-5. コミットする。メッセージは `<type>: <日本語の要約>`、本文に `Refs #<番号>`、末尾に `Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>`。レビューの指摘への修正なら、本文に `Agent-Fix: <回数>` のトレーラーを付ける。
+5. コミットする。メッセージは `<type>: <日本語の要約>`、本文に `Refs #<番号>`、末尾に `Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>`。git は `git -C <worktree の絶対パス>` の形で実行する。
 6. 作業ブランチを push する。PR は作らない（issue-loop の側で作る）。
 
 完了条件：完了条件の全項目に対応するコードとテストがあり、`scripts/verify.sh` がすべて通り、コミットが push されている。
