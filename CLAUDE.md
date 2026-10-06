@@ -19,7 +19,7 @@ Duolingo などで指したチェスの対局を、1手ずつ「他の手なら�
 - ユーザーとは日本語で話す。ユーザーはコードを読まないので、報告は利用者から見た変化と判断の ID で書く（D93、D94）。
 - 作業は Issue 単位。Issue を進めるときは `issue-loop` スキルに従う（worktree、実装役と別のレビュー役のサブエージェント、`scripts/verify.sh`、PR、マージ、Issue への「## 結果」）。
 - 設計を決めるときは `design-grilling` スキル、保守の見直しは `weekly-review` スキル。
-- コミットの作者は `yotarotsukada <yotarotsukada@gmail.com>`。main へ直接コミット・push しない。マージは `gh pr merge --squash --author-email yotarotsukada@gmail.com`。Hooks がこれを確かめる。
+- コミットの作者は `yotarotsukada <yotarotsukada@gmail.com>`。main へは PR を通してだけ入れる。具体的な形は issue-loop にあり、Hooks（`.claude/hooks/`）が確かめる。
 - ADR・台帳の既存の記述・fly.toml・レビューの観点・Hooks を変えるときは、ユーザーに確認する（D120）。PR になっていれば、PR のリンクを渡し、GitHub の画面でのレビューと「承認」のコメントを待つ。
 - スコープ外の改善は、同じ PR に入れず「別 Issue の候補」として報告する。
 

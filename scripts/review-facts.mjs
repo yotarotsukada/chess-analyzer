@@ -52,11 +52,12 @@ const facts = {
 const testFileChanged = files.some((f) => /^tests\/unit\//.test(f.path));
 for (const f of files) {
   if (f.status === "D") {
-    if (/\.(test|spec)\.ts$/.test(f.path)) facts.removedTests.push({ path: f.path, line: "(ファイルごと削除)" });
+    if (/\.(test|spec)\.(ts|tsx|js|mjs)$/.test(f.path))
+      facts.removedTests.push({ path: f.path, line: "(ファイルごと削除)" });
     continue;
   }
   const d = diffOf(f.path);
-  if (/\.(test|spec)\.ts$/.test(f.path)) {
+  if (/\.(test|spec)\.(ts|tsx|js|mjs)$/.test(f.path)) {
     for (const l of removed(d))
       if (/\b(it|test)(\.each)?\s*\(/.test(l)) facts.removedTests.push({ path: f.path, line: l.slice(1).trim() });
     for (const l of added(d))

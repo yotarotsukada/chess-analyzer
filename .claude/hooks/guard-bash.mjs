@@ -158,7 +158,8 @@ for (let i = 0; i < parts.length; i++) {
     const targetsMain = refspecs.some((r) => /(^|:)\+?(refs\/heads\/)?main$/.test(r));
     const onMain = git(gitCwd, "branch", "--show-current") === "main";
     const implicit = refspecs.length === 0 || refspecs.some((r) => r === "HEAD" || r === "@");
-    if (targetsMain || (onMain && implicit)) {
+    const pushesAll = /\s--(all|mirror)(\s|$)/.test(` ${part} `);
+    if (targetsMain || pushesAll || (onMain && implicit)) {
       deny("main に直接 push しない。作業ブランチを push して PR を作る。main への反映は gh pr merge で行う。");
     }
     if (/\s(--force|-f)(\s|$)/.test(` ${part} `) && !part.includes("--force-with-lease")) {
