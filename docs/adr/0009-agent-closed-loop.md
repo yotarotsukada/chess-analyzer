@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 ---
 
 # マージまでこの PC の Claude Code が行う閉ループにする

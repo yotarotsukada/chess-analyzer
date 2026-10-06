@@ -232,4 +232,11 @@ GitHub App と GitHub Actions 上のエージェントでループを回す案�
 | D121 | 1つの Issue のループ: (1) worktree でブランチを切る → (2) 実装のサブエージェント → (3) ローカルの関門（lint・型・ユニット・docker compose の E2E）→ (4) 実装の文脈を持たない新しいサブエージェントがレビュー（観点はスキル。blocking の基準は D110）→ (5) 指摘があれば修正（最大2回。収束しなければ needs-decision でユーザーに聞く）→ (6) PR を作る（Closes #n）→ (7) GitHub の CI が緑 → (8) squash でマージ → (9) Actions のデプロイの結果を確かめる → (10) Issue の本文の末尾に「## 結果」を書く（D102、X11）。同時に進める Issue は1つ。 | 設計 |
 | D122 | 置き換えの整理。**無効**: D96（GitHub App）、D98（ルールセットと agent-review の必須チェック）、D104 の GitHub 上の上限と停止スイッチ、D106 のうち Actions 上のエージェントに関するもの、D108、D109、D111 は D120 に吸収、D112（human-gate）、D114。**そのまま有効**: D97 の考え方（D121 に置き換え）、D99（人に戻す条件。戻す先はこのセッション）、D101（デプロイの安全網）、D102（要約の中身）、D105（Dependabot の小さな更新は、指示を受けたときにこのセッションが関門を通してマージ。週次レビューも指示を受けて行う）、D107・D110（レビューの一貫性と blocking の基準）、D115（試運転）。D106 のうち、FLY_API_TOKEN を production の Environment に入れること、アクションの SHA 固定、pull_request_target を使わないことは有効。D113 は「Actions のデプロイが本番の確認で失敗したら、直前のイメージに戻して incident の Issue を開く。revert PR は、次の指示のときにこのセッションが作る」に置き換え。 | 設計 |
 
+### ハーネス（#28、2026-10-07）
+
+| ID | 判断 | 出典 |
+|---|---|---|
+| D123 | **D120 の補足**: ユーザーの確認が要るものに、ハーネスの Hooks（`.claude/hooks/`、`.claude/settings.json`）を加える。台帳への新しい判断の追記も確認の対象にする（Hooks が編集を止めるため）。確認は PR のリンクを渡し、GitHub の画面でのレビューと、PR への「承認」のコメントで受ける（PR の作者がユーザー自身なので Approve は使えない）。 | U・設計 |
+| D124 | 作業フローは Claude Code のハーネスとしてリポジトリに置く: Skills（issue-loop、review、design-grilling、weekly-review）、Agents（implementer、reviewer）、Hooks（コミットの作者、main への直接のコミット・push、マージの形、確認が要るファイル）、Rules（パスごとの決まり）、`scripts/verify.sh`。 | U・設計 |
+
 <!-- ここに Round ごとの Q と A を追記する -->

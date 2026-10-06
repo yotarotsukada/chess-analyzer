@@ -4,37 +4,27 @@ Duolingo などで指したチェスの対局を、1手ずつ「他の手なら�
 
 ## 先に読むもの
 
-- `CONTEXT.md`：用語集。コード・UI・Issue でもこの用語を使う（Game, Game Review, Candidate Move, Variation, Played Move, Player, Visitor など）。
-- `docs/decisions.md`：確定した判断（D1〜）。矛盾する変更をしない。覆す必要があるなら、PR で番号を挙げて理由を書く。
-- `docs/adr/`：後から変えにくい判断。特に、次のことはしない。
-  - Next.js を使う（ADR 0006）
-  - chessground など GPL の盤面 UI を使う（ADR 0003）
-  - Chess.com からの取り込み、Duolingo のスクレイピングや拡張機能（ADR 0002）
-  - ログインを足す（ADR 0005）
-  - GPL や AGPL のリポジトリ（chessops、lichess-puzzler など）からコードを持ってくる・移植する（ADR 0008）
-- 重要局面（Key Moment）の機能は、AI Commentary がなくても完結させる。会員を前提にしたテーブルや分岐を先回りして作らない（ADR 0007）。
+- `CONTEXT.md`：用語集。コード・UI・Issue でもこの用語を使う。
+- `docs/decisions.md`：確定した判断（D1〜）。矛盾する変更をしない。覆す必要があるなら、番号を挙げてユーザーに聞く。
+- `docs/adr/`：後から変えにくい判断。特に守ること：
+  - Web フレームワークは React Router on Vite のモノリス（ADR 0006）
+  - 盤面 UI や戦術判定は MIT / BSD のものか自作。GPL・AGPL のコードは持ち込まない（ADR 0003、0008）
+  - 外部サービスからの取り込みは Lichess の API と、ユーザー本人の手入力・PGN だけ（ADR 0002）
+  - ログインなし。所有は Edit Token（ADR 0005）
+  - Key Moment は AI Commentary がなくても完結させる。会員の仕組みは AI を実装するまで作らない（ADR 0007）
+- `.claude/rules/`：パスごとの決まり（app/domain、server、マイグレーション、画面、ハーネス）。
 
 ## 進め方
 
-- MVP は main に直接コミットした（R1）。それ以降の作業は必ず Issue 単位で行う。`main` から作業ブランチを切り、その Issue のスコープだけを変更して、`main` への PR を出す。PR の本文に `Closes #<番号>` を書く。
-- スコープ外の改善を見つけたら、同じ PR には入れず、PR の本文に「別 Issue の候補」として書く。
-- マージは人が行う。自分でマージしない。
-- コミットの作者は `yotarotsukada <yotarotsukada@gmail.com>`。
+- ユーザーとは日本語で話す。ユーザーはコードを読まないので、報告は利用者から見た変化と判断の ID で書く（D93、D94）。
+- 作業は Issue 単位。Issue を進めるときは `issue-loop` スキルに従う（worktree、実装役と別のレビュー役のサブエージェント、`scripts/verify.sh`、PR、マージ、Issue への「## 結果」）。
+- 設計を決めるときは `design-grilling` スキル、保守の見直しは `weekly-review` スキル。
+- コミットの作者は `yotarotsukada <yotarotsukada@gmail.com>`。main へは PR を通してだけ入れる。具体的な形は issue-loop にあり、Hooks（`.claude/hooks/`）が確かめる。
+- ADR・台帳の既存の記述・fly.toml・レビューの観点・Hooks を変えるときは、ユーザーに確認する（D120）。PR になっていれば、PR のリンクを渡し、GitHub の画面でのレビューと「承認」のコメントを待つ。
+- スコープ外の改善は、同じ PR に入れず「別 Issue の候補」として報告する。
 
 ## 構成
 
-- `app/`：React Router（framework mode, Vite）。`app/domain/` はブラウザとサーバーで共有する純粋なロジック（勝率の換算、Move Classification、Game Review の組み立て）。
-- `server/`：Node 専用（DB、キュー、Stockfish）。ルートからは loader / action の中で `await import("@server/...")` する。
-- `server/worker/main.ts`：解析 Worker。Stockfish を子プロセスで動かす。Fly では別の process group で、ジョブがある間だけ起動する（ADR 0001）。
-- DB は Postgres（Drizzle）。スキーマを変えたら `pnpm db:generate` でマイグレーションを作る。
-- UI の文言は `app/i18n/ja.ts` に置く（直書きしない）。
-
-## コマンド
-
-```sh
-pnpm lint && pnpm typecheck && pnpm test   # PR 前に必ず通す
-docker compose up -d --build               # db / web / worker（E2E 用。depth 6）
-pnpm test:e2e                              # docker compose の上で Playwright
-```
-
-テストの方針：ドメインのロジックは `tests/unit/` にユニットテスト、エンジンは `Engine` インターフェースのスタブに差し替える。画面を通した確認は `e2e/` に書く。
+- `app/`：React Router（framework mode, Vite）。`app/domain/` はブラウザとサーバーで共有する純粋なロジック。
+- `server/`：Node 専用（DB、キュー、Stockfish）。`server/worker/main.ts` が解析 Worker（ADR 0001）。
+- 検証：`scripts/verify.sh`（lint・型・ユニット・Docker 上の E2E。E2E の Stockfish は depth 6）。
