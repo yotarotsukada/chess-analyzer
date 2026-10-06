@@ -48,6 +48,34 @@ _Avoid_: 解析結果, review（Game Review は Visitor に見せる振り返り
 Analysis の中の、1局面についての Candidate Move とその評価。
 _Avoid_: eval, ply data
 
+**Key Moment**:
+1つの Game のうち、勝敗の流れに大きく関わった Player の手。1局に最大3つ。Mistake / Blunder、Missed Opportunity、Turning Point、Only Move、Punishing Move のいずれか。
+_Avoid_: 重要手, highlight, critical move
+
+**Missed Opportunity**:
+相手の Mistake や Blunder の直後に Player が指した、勝率の落ち幅が Mistake 以上の手。相手のミスを咎め損ねた手。
+_Avoid_: 見逃し（表示名としては使ってよい）, missed tactic
+
+**Punishing Move**:
+相手の Mistake や Blunder の直後に Player が指した、勝率の落ち幅が Inaccuracy 未満の手。表示名は「相手のミスを咎めた」。
+_Avoid_: refutation, 咎め
+
+**Only Move**:
+最善手で、ほかの候補手なら形勢を大きく損ねた手。表示名は「好手」。
+_Avoid_: brilliant, !!, 妙手
+
+**Turning Point**:
+Mistake 以上の手がないまま、Player から見た Eval Level が何手かかけて優勢側から劣勢側へ入れ替わった区間で、落ち幅が最も大きかった Player の手。小さなミスの積み重ねで形勢を失った場面を指す。1手で入れ替えた悪手は Turning Point ではなく、「形勢逆転」の属性を持つ Mistake / Blunder。
+_Avoid_: 分岐点, swing
+
+**Moment Facts**:
+Key Moment について、アルゴリズムで確かめた事実の集まり（種類、評価の変化、より良い手、駒の得失など）。カードの文章と AI Commentary の両方の入力になる。
+_Avoid_: 解説データ, comment
+
+**AI Commentary**:
+Moment Facts をもとに LLM が書いた文章の解説。任意の機能で、なくても Game Review は成り立つ。
+_Avoid_: 解説, explanation, AI 解析
+
 **Book Move**:
 定跡の手順と一致し、かつ勝率をほとんど落とさなかった Played Move。Move Classification の対象外で、オープニング名を伴う。
 _Avoid_: 定跡手, opening move
