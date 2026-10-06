@@ -8,8 +8,9 @@ status: proposed
 
 - GitHub の操作は、ユーザーが作る独自の GitHub App 1つで行う。この App には workflows と administration の権限を与えない。エージェントは、ワークフローを変える push を GitHub に拒否される。
 - Fly のデプロイ用のトークンは production の Environment に入れ、main からのデプロイのジョブにだけ渡す。エージェントが動くジョブには、Claude の認証と App のトークンしか渡さない。
-- エージェントが使えるコマンドは列挙して許可する。秘密情報の操作、範囲の広い API 呼び出し、外部への通信、Web の閲覧は許可しない。
-- 起動できるのは owner だけ。取り込むコメントは owner と App の bot のものだけにする。自動マージの対象は、App の bot が作者の PR と、Dependabot の小さな更新だけにする。
+- エージェントが動くジョブでは、GITHUB_TOKEN の権限を contents: read にし、checkout の資格情報を残さない。書き込みに使えるのは App のトークンだけにする。
+- エージェントが使えるコマンドは列挙して許可する。秘密情報の操作、範囲の広い API 呼び出し、任意の外部通信（curl など）、Web の閲覧は許可しない。依存の取得は、ロックファイルに沿ったものに限る。
+- 起動できるのは owner だけ。取り込むコメントは owner と App の bot のものだけにする。ワークフローが auto-merge を有効にするのは、作者が App の bot の PR、Dependabot の小さな更新、revert PR だけにする。
 
 リポジトリは公開しているので、Issue やコメントに書かれた第三者の文章は、プロンプトインジェクションの入り口になる。境界をプロンプトに頼ると、注入された指示で破られうる。
 
